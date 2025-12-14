@@ -11,11 +11,13 @@ import java.util.Random;
  */
 public final class WordleDictionary {
 
+    private static List<String> removedWords;
     private static List<String> words;
     private final Random random;
 
 
     public WordleDictionary(final List<String> sourceWords) {
+        removedWords = new ArrayList<>();
         words = normalize(sourceWords);
         random = new Random();
     }
@@ -29,11 +31,11 @@ public final class WordleDictionary {
         return words;
     }
 
-    public char[] getGuessedWord() {
+    public String getGuessedWord() {
         final int index = random.nextInt(words.size());
         String guessedWord = words.get(index);
         words.remove(guessedWord);
-        return guessedWord.toCharArray();
+        return guessedWord;
     }
 
     public List<String> getWords() {
@@ -41,10 +43,11 @@ public final class WordleDictionary {
     }
 
     public void remove(final String word) {
+        removedWords.add(word);
         words.remove(word);
     }
 
     public boolean contains(final String word) {
-        return words.contains(word);
+        return words.contains(word) | removedWords.contains(word);
     }
 }

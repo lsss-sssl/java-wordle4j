@@ -8,8 +8,7 @@ import ru.yandex.practicum.util.LangValidator;
 import ru.yandex.practicum.util.LengthValidator;
 import ru.yandex.practicum.util.Validator;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /*
 в этом классе хранится словарь и состояние игры
@@ -25,14 +24,14 @@ import java.util.List;
  */
 public class WordleGame {
 
-    private final char[] answer;
+    private final String answer;
     private int attemptsLeft;
     private final WordleDictionary dictionary;
     private final char[] correctChars;
-    private final List<String> foundChars;
-    private final List<String> invalidChars;
+    private final Map<Character, Integer> foundChars;
+    private final Set<Character> invalidChars;
     private final List<String> hints;
-    private final List<String> attempts;
+    private final List<String> history;
     private Status status;
     private final List<Validator> validators;
 
@@ -41,34 +40,56 @@ public class WordleGame {
         this.answer = wordleDictionary.getGuessedWord();
         this.attemptsLeft = 6;
         this.correctChars = new char[5];
-        this.foundChars = new ArrayList<>();
-        this.invalidChars = new ArrayList<>();
+        this.foundChars = new HashMap<>();
+        this.invalidChars = new HashSet<>();
         this.hints = wordleDictionary.getWords();
-        this.attempts = new ArrayList<>();
+        this.history = new ArrayList<>();
         this.status = Status.IN_PROGRESS;
-        validators = List.of(new LengthValidator(), new CharactersValidator(), new LangValidator());
+        this.validators = List.of(new LengthValidator(), new CharactersValidator(), new LangValidator());
     }
 
     public String check(final String word) throws ValidateException, WordNotFoundInDictionary {
         decreaseAttempts();
-        String response;
+        final String response;
+        boolean isHint = false;
         if (!word.isEmpty()) {
             checkValidationRules(word);
             checkDictionary(word);
 
             response = word;
         } else {
+            isHint = true;
             response = getHint();
         }
         dictionary.remove(response);
-        attempts.add(response);
+        history.add(response);
+        updateCharacters(response);
+
+
+
         
 
         return response;
     }
     private void updateCharacters(final String word) {
         char[] sourceChars = word.toCharArray();
+        for (int i = 0; i < sourceChars.length; i++) {
+            char c = sourceChars[i];
+            if (c == answer.charAt(i)) {
+                correctChars[i] = c;
+            } else if (answer.indexOf(c) < 0) {
+                invalidChars.add(c);
+            } else {
+                foundChars.merge(c, 1, Integer::sum);
+            }
+        }
+    }
 
+    private void updateStatus() {
+        /**
+         * equls check
+         *
+         */
     }
 
     public Status getStatus() {
