@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.util.Scanner;
 
 /*
-в главном классе нам нужно:
+    в главном классе нам нужно:
     создать лог-файл (он должен передаваться во все классы)
     создать загрузчик словарей WordleDictionaryLoader
     загрузить словарь WordleDictionary с помощью класса WordleDictionaryLoader
@@ -45,6 +45,8 @@ public class Wordle {
                 }
             }
             scanner.close();
+            if (game.getStatus().equals(Status.IS_WIN)) System.out.printf("\n%26s%15s", game.getAnswer(), "EPIC VICTORY");
+            else if (game.getStatus().equals(Status.IS_LOSE)) System.out.printf("%s%10s", game.getAnswer(), "DEFEATED");
         } catch (IOException e) {
             System.out.println("ERROR");
         }

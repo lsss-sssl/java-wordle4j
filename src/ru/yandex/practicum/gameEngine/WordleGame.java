@@ -11,27 +11,29 @@ import ru.yandex.practicum.util.Validator;
 import java.util.*;
 
 /*
-в этом классе хранится словарь и состояние игры
+    в этом классе хранится словарь и состояние игры
     текущий шаг
     всё что пользователь вводил
     правильный ответ
 
-в этом классе нужны методы, которые
+    в этом классе нужны методы, которые
     проанализируют совпадение слова с ответом
     предложат слово-подсказку с учётом всего, что вводил пользователь ранее
 
-не забудьте про специальные типы исключений для игровых и неигровых ошибок
+    не забудьте про специальные типы исключений для игровых и неигровых ошибок
  */
+
 public class WordleGame {
 
     private final String answer;
     private int attemptsLeft;
     private final WordleDictionary dictionary;
-    private final char[] correctChars;
-    private final Map<Character, Integer> foundChars;
-    private final Set<Character> invalidChars;
+
+    private final char[] correct;
+    private final Set<Character> presented;
+    private final Set<Character> excluded;
+
     private final List<String> hints;
-    private final List<String> history;
     private Status status;
     private final List<Validator> validators;
 
@@ -39,57 +41,91 @@ public class WordleGame {
         this.dictionary = wordleDictionary;
         this.answer = wordleDictionary.getGuessedWord();
         this.attemptsLeft = 6;
-        this.correctChars = new char[5];
-        this.foundChars = new HashMap<>();
-        this.invalidChars = new HashSet<>();
-        this.hints = wordleDictionary.getWords();
-        this.history = new ArrayList<>();
+        this.correct = new char[5];
+        this.presented = new HashSet<>();
+        this.excluded = new HashSet<>();
+        this.hints = new ArrayList<>(wordleDictionary.getWords());
         this.status = Status.IN_PROGRESS;
         this.validators = List.of(new LengthValidator(), new CharactersValidator(), new LangValidator());
     }
 
-    public String check(final String word) throws ValidateException, WordNotFoundInDictionary {
+    public String getAnswer() {
+        return answer;
+    }
+
+    public String check( String word) throws ValidateException, WordNotFoundInDictionary {
         decreaseAttempts();
-        final String response;
         boolean isHint = false;
         if (!word.isEmpty()) {
             checkValidationRules(word);
             checkDictionary(word);
-
-            response = word;
         } else {
+            word = getHint();
             isHint = true;
-            response = getHint();
         }
-        dictionary.remove(response);
-        history.add(response);
-        updateCharacters(response);
 
+        String[] output = new String[WordleDictionary.getMaxWordLength()];
+        boolean[] used = new boolean[WordleDictionary.getMaxWordLength()];
 
+        for (int i = 0; i < WordleDictionary.getMaxWordLength(); i++) {
+            if (word.charAt(i) == answer.charAt(i)) {
+                output[i] = "+";
+                correct[i] = answer.charAt(i);
+                presented.add(answer.charAt(i));
+                used[i] = true;
+            }
+            if (answer.indexOf(word.charAt(i)) < 0) excluded.add(word.charAt(i));
+        }
 
-        
-
-        return response;
-    }
-    private void updateCharacters(final String word) {
-        char[] sourceChars = word.toCharArray();
-        for (int i = 0; i < sourceChars.length; i++) {
-            char c = sourceChars[i];
-            if (c == answer.charAt(i)) {
-                correctChars[i] = c;
-            } else if (answer.indexOf(c) < 0) {
-                invalidChars.add(c);
-            } else {
-                foundChars.merge(c, 1, Integer::sum);
+        for (int i = 0; i < WordleDictionary.getMaxWordLength(); i++) {
+            if (output[i] == null) {
+                boolean found = false;
+                for (int j = 0; j < WordleDictionary.getMaxWordLength(); j++) {
+                    if (!used[j] && word.charAt(i) == answer.charAt(j)) {
+                        found = true;
+                        used[j] = true;
+                        presented.add(answer.charAt(j));
+                        break;
+                    }
+                }
+                output[i] = found ? "^" : "-";
             }
         }
+        updateHints();
+        updateStatus(word);
+        return isHint ? word: String.join("", output);
+
     }
 
-    private void updateStatus() {
-        /**
-         * equls check
-         *
-         */
+    private boolean isValidHint(final String word) {
+        for (int i = 0; i < WordleDictionary.getMaxWordLength(); i++) {
+            if (correct[i] != '\u0000' && word.charAt(i) != correct[i]) return false;
+        }
+        for (char c : excluded) {
+            if (word.indexOf(c) >= 0) return false;
+        }
+        for (char c : presented) {
+            if (word.indexOf(c) < 0) return false;
+        }
+        return true;
+    }
+
+    private void updateHints() {
+        List<String> currentHints = List.copyOf(hints);
+        for (String hint : currentHints) {
+            if (!isValidHint(hint)) hints.remove(hint);
+        }
+    }
+
+    private String getHint() {
+        Random random = new Random();
+        int index = random.nextInt(hints.size());
+        return hints.get(index);
+    }
+
+    private void updateStatus(final String input) {
+        if (input.equals(answer) | hints.isEmpty()) status = Status.IS_WIN;
+        else if (attemptsLeft == 0) status = Status.IS_LOSE;
     }
 
     public Status getStatus() {
@@ -111,10 +147,7 @@ public class WordleGame {
     }
 
     private void checkDictionary(final String word) throws WordNotFoundInDictionary {
-        if(!dictionary.contains(word)) throw new WordNotFoundInDictionary("Word is missing in source file. Add word to file.");
-    }
-
-    private String getHint() {
-        return "HINTS";
+        if (!dictionary.contains(word))
+            throw new WordNotFoundInDictionary("Word is missing in source file. Add word to file.");
     }
 }
