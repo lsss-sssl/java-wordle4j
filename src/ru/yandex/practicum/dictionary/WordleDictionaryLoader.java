@@ -1,8 +1,6 @@
 package ru.yandex.practicum.dictionary;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,13 +11,21 @@ import java.util.List;
  */
 public final class WordleDictionaryLoader {
 
-    public static WordleDictionary load(final String fileName) throws IOException {
-        BufferedReader bf = new BufferedReader(new FileReader(fileName, StandardCharsets.UTF_8));
-        final List<String> sourceWords = new ArrayList<>();
-        while (bf.ready()) {
-            sourceWords.add(bf.readLine());
+    public static WordleDictionary load(final String fileName, PrintWriter log) throws IOException {
+        try (BufferedReader bf = new BufferedReader(new FileReader(fileName, StandardCharsets.UTF_8))){
+            final List<String> sourceWords = new ArrayList<>();
+            while (bf.ready()) {
+                sourceWords.add(bf.readLine());
+            }
+            bf.close();
+            log.printf("[PASS] - load source file: %45s\n", fileName);
+            return new WordleDictionary(fileName, sourceWords, log);
+        } catch (FileNotFoundException e) {
+            log.printf("[FAIL] - load source file: %45s\n", fileName);
+            throw new FileNotFoundException();
+        } catch (IOException e) {
+            log.printf("[ERROR] - load source file: %45s\n", fileName);
+            throw new IOException();
         }
-        bf.close();
-        return new WordleDictionary(sourceWords);
     }
 }

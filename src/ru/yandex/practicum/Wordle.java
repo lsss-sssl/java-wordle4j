@@ -2,10 +2,12 @@ package ru.yandex.practicum;
 
 import ru.yandex.practicum.dictionary.WordleDictionaryLoader;
 import ru.yandex.practicum.exception.gameLogicException.*;
-import ru.yandex.practicum.gameEngine.Status;
-import ru.yandex.practicum.gameEngine.WordleGame;
+import ru.yandex.practicum.engine.Status;
+import ru.yandex.practicum.engine.WordleGame;
 
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Scanner;
 
 /*
@@ -22,36 +24,28 @@ public class Wordle {
 
     public static void main(String[] args) {
 
-        try {
-            WordleGame game = new WordleGame(WordleDictionaryLoader.load("words_ru.txt"));
-
+        try (PrintWriter log = new PrintWriter(new FileWriter("log.txt"))) {
+            WordleGame game = new WordleGame(WordleDictionaryLoader.load("words_ru.txt", log), log);
             while (game.getStatus().equals(Status.IN_PROGRESS)) {
                 try {
                     System.out.printf("\nОсталось попыток: %s  ", game.getAttemptsLeft());
                     final String guess = scanner.nextLine();
                     System.out.printf("%26s  ", game.check(guess));
-
-
-                } catch (ValidateLengthException e) {
-                    System.out.println("1." + e.getMessage());
-                } catch (ValidateLangException e) {
-                    System.out.println("2." + e.getMessage());
-                } catch (WordNotFoundInDictionary e) {
-                    System.out.println("3." + e.getMessage());
-                } catch (ValidateCharactersException e) {
-                    System.out.println("4." + e.getMessage());
                 } catch (ValidateException e) {
-                    System.out.println("5." + e.getMessage());
+                    System.out.println(e.getMessage());
                 }
             }
             scanner.close();
-            if (game.getStatus().equals(Status.IS_WIN)) System.out.printf("\n%26s%15s", game.getAnswer(), "EPIC VICTORY");
-            else if (game.getStatus().equals(Status.IS_LOSE)) System.out.printf("%s%10s", game.getAnswer(), "DEFEATED");
+            if (game.getStatus().equals(Status.IS_WIN)) {
+                String message = String.format("\n%26s%15s", game.getAnswer(), "EPIC VICTORY\n");
+                System.out.printf(message);
+            } else if (game.getStatus().equals(Status.IS_LOSE)) {
+                String message = String.format("\n%26s%15s", game.getAnswer(), "DEFEATED\n");
+                System.out.printf(message);
+            }
         } catch (IOException e) {
-            System.out.println("ERROR");
+            throw new RuntimeException(e.getMessage());
         }
-
-
     }
 
 }
