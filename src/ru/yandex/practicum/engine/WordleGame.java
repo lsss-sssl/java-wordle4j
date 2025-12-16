@@ -46,6 +46,7 @@ public final class WordleGame {
                 new ExistValidator(dictionary.words()));
         logger.info("Game created. Answer chosen");
     }
+
     public String answer() {
         return answer;
     }
