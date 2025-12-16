@@ -41,7 +41,7 @@ public class WordleGameTest {
     @BeforeEach
     void createGame() throws IOException, MissingSourceException, EmptySourceException {
         Path file = tempDir.resolve("valid.txt");
-        Files.write(file, List.of("кошка", "роман", "аббат"));
+        Files.write(file, List.of("кошка", "роман", "борат"));
         fsp = new FileSourceProvider(file, new NullLogger());
         dictionary = new WordleDictionary(fsp.load(), new NullLogger());
         random = new Random();
