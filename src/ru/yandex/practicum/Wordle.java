@@ -1,7 +1,7 @@
 package ru.yandex.practicum;
 
 import ru.yandex.practicum.engine.GameState;
-import ru.yandex.practicum.engine.GuessResult;
+import ru.yandex.practicum.engine.ProcessResult;
 import ru.yandex.practicum.exception.cli.ApplicationException;
 import ru.yandex.practicum.exception.cli.StartException;
 import ru.yandex.practicum.exception.sourceException.EmptySourceException;
@@ -35,7 +35,6 @@ public final class Wordle {
 
     public static void main(String[] args) {
         try (PrintWriter writer = new PrintWriter(new FileWriter("log.txt"))) {
-
             Logger logger = new FileLogger(writer);
             Scanner scanner = new Scanner(System.in);
             Random random = new Random();
@@ -77,13 +76,11 @@ public final class Wordle {
             System.out.printf("Попыток осталось: %2s  ", game.attempts());
             final String input = scanner.nextLine().trim().toLowerCase(Locale.ROOT);
             try {
-                GuessResult output = game.process(input);
+                ProcessResult output = game.process(input);
                 if (input.isEmpty()) {
                     System.out.printf("Подсказка: %16s", output.pattern());
-                    //logger.info("Hint given: " + output.pattern());
                 } else {
                     System.out.printf("%27s", output.pattern());
-                    //logger.info("Player guessed: " + output.pattern());
                 }
             } catch (ValidateException e) {
                 System.out.print("Input error: " + e.getMessage());
@@ -94,6 +91,7 @@ public final class Wordle {
             }
             System.out.println();
         }
+        scanner.close();
     }
 
     private void result(WordleGame game) {
@@ -105,6 +103,5 @@ public final class Wordle {
             System.out.print("DEFEATED");
             logger.info("Player lost. Answer: " + game.answer());
         }
-
     }
 }

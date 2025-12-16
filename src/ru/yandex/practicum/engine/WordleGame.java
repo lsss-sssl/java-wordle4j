@@ -35,6 +35,9 @@ public final class WordleGame {
         this.wordLength = wordLength();
         this.correct = new char[wordLength()];
         this.logger = logger;
+        /**
+         * Hint generator contain answer -> spam enter to win (mostly)
+         */
         this.hintGenerator = new HintGenerator(dictionary.words(), random);
         this.validators = List.of(
                 new LengthValidator(),
@@ -55,7 +58,7 @@ public final class WordleGame {
         return attemptsLeft;
     }
 
-    public GuessResult process(final String word) throws ValidateException, GameIsFinishedException {
+    public ProcessResult process(final String word) throws ValidateException, GameIsFinishedException {
         ensureInProgress();
         String input = word;
         boolean isHint = false;
@@ -74,7 +77,7 @@ public final class WordleGame {
         if (isHint) {
             pattern = input;
         }
-        return new GuessResult(pattern, state, attemptsLeft);
+        return new ProcessResult(pattern, state, attemptsLeft);
     }
 
     private void transition(final String word) {

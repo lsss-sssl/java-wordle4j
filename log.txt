@@ -1,0 +1,6 @@
+[INFO] Application started
+[INFO] Loading source from: words_ru.txt
+[INFO] Loaded 67774 lines from: words_ru.txt
+[INFO] Dictionary created
+[INFO] Game created. Answer chosen
+[INFO] Game created with: 4165 words
