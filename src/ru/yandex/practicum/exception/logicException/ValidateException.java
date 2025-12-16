@@ -1,4 +1,4 @@
-package ru.yandex.practicum.exception.gameLogicException;
+package ru.yandex.practicum.exception.logicException;
 
 public class ValidateException extends Exception {
 

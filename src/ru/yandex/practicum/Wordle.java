@@ -1,51 +1,110 @@
 package ru.yandex.practicum;
 
-import ru.yandex.practicum.dictionary.WordleDictionaryLoader;
-import ru.yandex.practicum.exception.gameLogicException.*;
-import ru.yandex.practicum.engine.Status;
+import ru.yandex.practicum.engine.GameState;
+import ru.yandex.practicum.engine.GuessResult;
+import ru.yandex.practicum.exception.cli.ApplicationException;
+import ru.yandex.practicum.exception.cli.StartException;
+import ru.yandex.practicum.exception.sourceException.EmptySourceException;
+import ru.yandex.practicum.dictionary.WordleDictionary;
 import ru.yandex.practicum.engine.WordleGame;
+import ru.yandex.practicum.exception.logicException.GameIsFinishedException;
+import ru.yandex.practicum.exception.sourceException.MissingSourceException;
+import ru.yandex.practicum.exception.logicException.ValidateException;
+import ru.yandex.practicum.util.loader.FileSourceProvider;
+import ru.yandex.practicum.util.logger.FileLogger;
+import ru.yandex.practicum.util.logger.Logger;
 
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Path;
+import java.util.Locale;
+import java.util.Random;
 import java.util.Scanner;
 
-/*
-    в главном классе нам нужно:
-    создать лог-файл (он должен передаваться во все классы)
-    создать загрузчик словарей WordleDictionaryLoader
-    загрузить словарь WordleDictionary с помощью класса WordleDictionaryLoader
-    затем создать игру WordleGame и передать ей словарь
-    вызвать игровой метод в котором в цикле опрашивать пользователя и передавать информацию в игру
-    вывести состояние игры и конечный результат
- */
-public class Wordle {
-    private static final Scanner scanner = new Scanner(System.in);
+public final class Wordle {
+    private final Scanner scanner;
+    private final Random random;
+    private final Logger logger;
+
+    public Wordle(Scanner scanner, Random random, Logger logger) {
+        this.scanner = scanner;
+        this.random = random;
+        this.logger = logger;
+    }
 
     public static void main(String[] args) {
+        try (PrintWriter writer = new PrintWriter(new FileWriter("log.txt"))) {
 
-        try (PrintWriter log = new PrintWriter(new FileWriter("log.txt"))) {
-            WordleGame game = new WordleGame(WordleDictionaryLoader.load("words_ru.txt", log), log);
-            while (game.getStatus().equals(Status.IN_PROGRESS)) {
-                try {
-                    System.out.printf("\nОсталось попыток: %s  ", game.getAttemptsLeft());
-                    final String guess = scanner.nextLine();
-                    System.out.printf("%26s  ", game.check(guess));
-                } catch (ValidateException e) {
-                    System.out.println(e.getMessage());
-                }
-            }
-            scanner.close();
-            if (game.getStatus().equals(Status.IS_WIN)) {
-                String message = String.format("\n%26s%15s", game.getAnswer(), "EPIC VICTORY\n");
-                System.out.printf(message);
-            } else if (game.getStatus().equals(Status.IS_LOSE)) {
-                String message = String.format("\n%26s%15s", game.getAnswer(), "DEFEATED\n");
-                System.out.printf(message);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e.getMessage());
+            Logger logger = new FileLogger(writer);
+            Scanner scanner = new Scanner(System.in);
+            Random random = new Random();
+            logger.info("Application started");
+            new Wordle(scanner, random, logger).run();
+            logger.info("Application finished successfully");
+        } catch (ApplicationException e) {
+            System.err.println(e.userMessage());
+            System.exit(1);
+        } catch (Exception e) {
+            System.err.println("[ERROR] - unexpected fatal error");
+            e.printStackTrace();
+            System.exit(2);
         }
     }
 
+    private void run() {
+        try {
+            WordleGame game = create();
+            process(game);
+            result(game);
+        } catch (MissingSourceException | EmptySourceException | IOException e) {
+            logger.error("Failed to load dictionary");
+            throw new StartException("load dictionary: ", e);
+        }
+    }
+
+    private WordleGame create() throws MissingSourceException, EmptySourceException, IOException {
+        FileSourceProvider fsp = new FileSourceProvider(Path.of("words_ru.txt"), logger);
+        WordleDictionary dictionary = new WordleDictionary(fsp.load(), logger);
+        WordleGame game = new WordleGame(dictionary, random, logger);
+        logger.info("Game created with: " + dictionary.words().size() + " words");
+        return game;
+    }
+
+    private void process(WordleGame game) {
+        System.out.println("Введите слово или нажмите Enter для подсказки");
+        while (game.status() == GameState.IN_PROGRESS) {
+            System.out.printf("Попыток осталось: %2s  ", game.attempts());
+            final String input = scanner.nextLine().trim().toLowerCase(Locale.ROOT);
+            try {
+                GuessResult output = game.process(input);
+                if (input.isEmpty()) {
+                    System.out.printf("Подсказка: %16s", output.pattern());
+                    //logger.info("Hint given: " + output.pattern());
+                } else {
+                    System.out.printf("%27s", output.pattern());
+                    //logger.info("Player guessed: " + output.pattern());
+                }
+            } catch (ValidateException e) {
+                System.out.print("Input error: " + e.getMessage());
+                logger.info("Validation failed: " + e.getMessage());
+            } catch (GameIsFinishedException e) {
+                System.out.print("Game status: " + e.getMessage());
+                logger.info("Game finished: " + e.getMessage());
+            }
+            System.out.println();
+        }
+    }
+
+    private void result(WordleGame game) {
+        System.out.printf("Ответ: %20s  ", game.answer());
+        if (game.status() == GameState.WIN) {
+            System.out.print("EPIC VICTORY");
+            logger.info("Player won. Answer: " + game.answer());
+        } else {
+            System.out.print("DEFEATED");
+            logger.info("Player lost. Answer: " + game.answer());
+        }
+
+    }
 }
