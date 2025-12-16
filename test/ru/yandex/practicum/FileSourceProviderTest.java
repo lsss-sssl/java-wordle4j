@@ -3,6 +3,7 @@ package ru.yandex.practicum;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.api.Assertions.*;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 import ru.yandex.practicum.exception.sourceException.EmptySourceException;
@@ -30,7 +31,7 @@ public class FileSourceProviderTest {
         assertEquals(3, words.size());
         assertTrue(words.contains("кошка"));
         assertTrue(words.contains("мышка"));
-        assertTrue( words.contains("арбуз"));
+        assertTrue(words.contains("арбуз"));
 
     }
 
@@ -58,7 +59,7 @@ public class FileSourceProviderTest {
         assertEquals(3, words.size());
         assertTrue(words.contains("кошка"));
         assertTrue(words.contains(""));
-        assertTrue( words.contains("арбуз"));
+        assertTrue(words.contains("арбуз"));
     }
 
     @Test

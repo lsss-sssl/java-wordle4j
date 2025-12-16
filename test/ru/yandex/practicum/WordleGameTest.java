@@ -4,6 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.api.Assertions.*;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 import ru.yandex.practicum.dictionary.WordleDictionary;

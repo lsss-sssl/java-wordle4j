@@ -2,7 +2,7 @@ package ru.yandex.practicum.util.logger;
 
 import java.io.PrintWriter;
 
-public final class FileLogger implements Logger{
+public final class FileLogger implements Logger {
 
     private final PrintWriter writer;
 
