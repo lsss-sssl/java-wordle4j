@@ -20,7 +20,7 @@ import java.util.List;
 public class FileSourceProviderTest {
 
     @TempDir
-    Path tempDir;
+    protected Path tempDir;
 
     @Test
     void testLoadValidFile() throws IOException, MissingSourceException, EmptySourceException {

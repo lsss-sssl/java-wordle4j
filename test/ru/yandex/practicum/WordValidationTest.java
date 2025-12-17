@@ -23,21 +23,18 @@ import java.util.Random;
 
 public class WordValidationTest {
 
-    static FileSourceProvider fsp;
-    static WordleDictionary dictionary;
-    static Random random;
-    static WordleGame game;
+    private static WordleGame game;
 
     @TempDir
-    static Path tempDir;
+    protected static Path tempDir;
 
     @BeforeEach
     void createGame() throws IOException, MissingSourceException, EmptySourceException {
         Path file = tempDir.resolve("valid.txt");
         Files.write(file, List.of("кошка"));
-        fsp = new FileSourceProvider(file, new NullLogger());
-        dictionary = new WordleDictionary(fsp.load(), new NullLogger());
-        random = new Random();
+        FileSourceProvider fsp = new FileSourceProvider(file, new NullLogger());
+        WordleDictionary dictionary = new WordleDictionary(fsp.load(), new NullLogger());
+        Random random = new Random();
         game = new WordleGame(dictionary, random, new NullLogger());
     }
 

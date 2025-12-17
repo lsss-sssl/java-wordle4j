@@ -21,7 +21,7 @@ import java.util.List;
 public class WordleDictionaryTest {
 
     @TempDir
-    Path tempDir;
+    protected Path tempDir;
 
     @Test
     void testNormalizationAndFiltering() throws IOException, MissingSourceException, EmptySourceException {

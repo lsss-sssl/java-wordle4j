@@ -27,24 +27,22 @@ import java.util.Random;
 
 public class WordleGameTest {
 
-    static FileSourceProvider fsp;
-    static WordleDictionary dictionary;
-    static Random random;
-    static WordleGame game;
-    static String answer;
-    static String noAnswer1;
-    static String noAnswer2;
+    private static WordleDictionary dictionary;
+    private static WordleGame game;
+    private static String answer;
+    private static String noAnswer1;
+    private static String noAnswer2;
 
     @TempDir
-    static Path tempDir;
+    protected static Path tempDir;
 
     @BeforeEach
     void createGame() throws IOException, MissingSourceException, EmptySourceException {
         Path file = tempDir.resolve("valid.txt");
         Files.write(file, List.of("кошка", "роман", "борат"));
-        fsp = new FileSourceProvider(file, new NullLogger());
+        FileSourceProvider fsp = new FileSourceProvider(file, new NullLogger());
         dictionary = new WordleDictionary(fsp.load(), new NullLogger());
-        random = new Random();
+        Random random = new Random();
         game = new WordleGame(dictionary, random, new NullLogger());
         answer = game.answer();
         List<String> words = new ArrayList<>(List.copyOf(dictionary.words()));
